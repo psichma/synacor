@@ -1,3 +1,5 @@
 *.o
 comp
 .ycm_extra_conf.py
+*.swp
+after3rd
