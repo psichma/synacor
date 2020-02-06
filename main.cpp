@@ -65,7 +65,7 @@ unsigned short getValue(unsigned short val) {
 	return registers[getRegisterIdx(val)];
 }
 
-
+std::string inputBuffer;
 
 int main(int argc, char* argv[]) {
 	std::string filename = "challenge.bin"; // could later be an argument
@@ -96,11 +96,11 @@ int main(int argc, char* argv[]) {
 		else if(instr == Opcode::SET) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
-			
+
 			registers[a] = b;
 			pc += 3;
 		}
-		
+
 		// 2 PUSH
 		//   push <a> onto the stack
 		else if(instr == Opcode::PUSH) {
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
 			unsigned short c = getValue(memory[pc + 3]);
-			
+
 			unsigned short result = (b + c) % MODULO;
 			registers[a] = result;
 			pc += 4;
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
 			unsigned short c = getValue(memory[pc + 3]);
-			
+
 			unsigned short result = (b * c) % MODULO;
 			registers[a] = result;
 			pc += 4;
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
 			unsigned short c = getValue(memory[pc + 3]);
-			
+
 			unsigned short result = b % c;
 			registers[a] = result;
 			pc += 4;
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
 			unsigned short c = getValue(memory[pc + 3]);
-			
+
 			unsigned short result = b & c;
 			registers[a] = result;
 			pc += 4;
@@ -223,7 +223,7 @@ int main(int argc, char* argv[]) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
 			unsigned short c = getValue(memory[pc + 3]);
-			
+
 			unsigned short result = b | c;
 			registers[a] = result;
 			pc += 4;
@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
 		else if(instr == Opcode::NOT) {
 			unsigned short a = getRegisterIdx(memory[pc + 1]);
 			unsigned short b = getValue(memory[pc + 2]);
-		
+
 			unsigned short saved = b >> 16;
 			b = ~b;
 
@@ -300,8 +300,16 @@ int main(int argc, char* argv[]) {
 		// 20 IN
 		//   read a character from the terminal and write its ascii code to <a>; it can be assumed that once input starts, it will continue until a newline is encountered; this means that you can safely read whole lines from the keyboard and trust that they will be fully read
 		else if(instr == Opcode::IN) {
-			printf("should read\n");
-			return 1;
+			if(inputBuffer.size() == 0) {
+				char buff[64];
+				fgets(buff, 64, stdin);
+				inputBuffer = std::string(buff);
+			}
+			unsigned short a = getRegisterIdx(memory[pc + 1]);
+			unsigned short current = static_cast<unsigned short>(inputBuffer[0]);
+			registers[a] = current;
+			inputBuffer = inputBuffer.substr(1);
+			pc += 2;
 		}
 
 		// 21 NOOP
@@ -312,7 +320,7 @@ int main(int argc, char* argv[]) {
 
 		// ERROR
 		else {
-		
+
 			printf("ERROR, unknown opcode: %d\nPC: %d", instr, pc);
 			return 1;
 		}
